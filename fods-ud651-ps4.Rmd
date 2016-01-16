@@ -1,0 +1,344 @@
+---
+title: "UD651 - Problem Set 4"
+author: "Ivan Heneghan"
+date: "16 January 2016"
+output: html_document
+---
+
+This is the project report for UD651 - Problem Set 4.
+
+Load relevant libraries:
+
+```{r}
+library(data.table)
+library(plyr)
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+library(gridExtra)
+library(lubridate)
+library(reshape2)
+library(tidyr)
+library(xlsx)
+```
+
+1. Scatterplot - price vs x
+
+```{r}
+ggplot(data = diamonds, aes(x = price, y = x)) + 
+  geom_point() +
+  xlab("Price") +
+  ylab("X") +
+  ggtitle("Price vs X")
+```
+
+2. Correlations - price vs. x, y, z
+
+```{r}
+with(diamonds, cor.test(price, x, method = "pearson"))
+with(diamonds, cor.test(price, y, method = "pearson"))
+with(diamonds, cor.test(price, z, method = "pearson"))
+```
+
+3. Scatterplot - price vs depth
+
+```{r}
+ggplot(data = diamonds, aes(x = price, y = depth)) + 
+  geom_point() +
+  xlab("Price") +
+  ylab("Depth") +
+  ggtitle("Price vs Depth")
+```
+
+4. Scatterplot - price vs depth adjustments
+
+4a. Get range of price
+
+```{r}
+range(diamonds$depth)
+```
+
+4b. Plot
+
+```{r}
+ggplot(data = diamonds, aes(x = depth, y = price)) + 
+  geom_point(alpha = 1/100) +
+  scale_x_continuous(breaks = seq(43, 79, 2)) +
+  xlab("Depth") +
+  ylab("Price") +
+  ggtitle("Price vs Depth")
+```
+
+4c. Correlation of price & depth
+
+```{r}
+with(diamonds, cor.test(price, depth, method = "pearson"))
+```
+
+5. Scatterplot - price vs carat
+
+5a. Get range of price
+
+```{r}
+range(diamonds$carat)
+```
+
+5b. Plot
+
+```{r}
+ggplot(data = diamonds, aes(x = carat, y = price)) + 
+  geom_point(stat = "summary", fun.y = quantile, fun.args = list(probs = .99)) +
+  scale_x_continuous(breaks = seq(0.2, 5.01, 0.5)) +
+  xlab("Carat") +
+  ylab("Price") +
+  ggtitle("Price vs Carat")
+```
+
+6. Scatterplot - price vs volume
+
+6a. Create volume variable
+
+```{r}
+diamonds$volume <- diamonds$x * diamonds$y * diamonds$z
+range(diamonds$volume)
+```
+
+6b. Scatterplot
+
+```{r}
+ggplot(data = diamonds, aes(x = volume, y = price)) + 
+  geom_point() +
+  scale_x_continuous(breaks = seq(0, 3841, 50)) +
+  xlab("Volume") +
+  ylab("Price") +
+  ggtitle("Price vs Volume")
+```
+
+7. Scatterplot - removing outliers through subset
+
+7a. Create subsetted data set
+
+```{r}
+diamondsReduced <- subset(diamonds, volume > 0 & volume <= 800)
+```
+
+7b. Correlation of this
+
+```{r}
+with(diamondsReduced, cor.test(price, volume, method = "pearson"))
+```
+
+7c. Adjustments
+
+```{r}
+ggplot(data = diamondsReduced, aes(x = volume, y = price)) + 
+  geom_point(alpha = 1/10) +
+  geom_smooth(method = "lm", color = "red") + 
+  scale_x_continuous(breaks = seq(0, 3841, 50)) +
+  xlab("Volume") +
+  ylab("Price") +
+  ggtitle("Price vs Volume")
+```
+
+8. Mean price by clarity
+
+8a. Creation of the new data frame
+
+```{r}
+diamondsByClarity <- diamonds %>% 
+  group_by(clarity) %>% 
+  summarise(mean_price = mean(price),
+            median_price = median(price),
+            min_price = min(price),
+            max_price = max(price),
+            n = n()) %>% 
+  arrange(clarity)
+```
+
+8b. Bar charts of mean price
+
+```{r}
+diamonds_by_clarity <- group_by(diamonds, clarity)
+diamonds_mp_by_clarity <- summarise(diamonds_by_clarity, mean_price = mean(price))
+
+diamonds_by_color <- group_by(diamonds, color)
+diamonds_mp_by_color <- summarise(diamonds_by_color, mean_price = mean(price))
+
+g1 <- ggplot(data = diamonds_mp_by_clarity, aes(x = clarity, y = mean_price)) + 
+  geom_bar(stat="identity")
+g2 <- ggplot(data = diamonds_mp_by_color, aes(x = color, y = mean_price)) + 
+  geom_bar(stat="identity")
+grid.arrange(g1, g2, ncol = 1)
+```
+
+8c. Looking at mean price/cut relationship
+
+```{r}
+diamonds_by_cut <- group_by(diamonds, cut)
+diamonds_mp_by_cut <- summarise(diamonds_by_cut, mean_price = mean(price))
+g3 <- ggplot(data = diamonds_mp_by_cut, aes(x = cut, y = mean_price)) + 
+  geom_bar(stat="identity")
+grid.arrange(g1, g2, g3, ncol = 1)
+```
+
+9. Gapminder revisited - look at link between mobile phone ownership & income per person/GDP per capita. 
+
+9a. Go to right directory
+
+9b. Import data
+
+```{r}
+cell <- read.csv("cell phone per 100.csv", 1, stringsAsFactors = FALSE)
+gdp <- read.csv("GDPpercapitaconstant2000US.csv", 1, stringsAsFactors = FALSE)
+```
+
+9c. Check data
+
+```{r}
+str(cell)
+head(cell)
+str(gdp)
+head(gdp)
+```
+
+9d. Clean up cell data
+
+```{r}
+names(cell)[1] <- c("country")
+cell <- cell %>% gather(year, subs, -country)
+cell$year <- gsub("X", "", cell$year)
+```
+
+9e. Clean up gdp data
+
+```{r}
+names(gdp)[1] <- c("country")
+gdp <- gdp %>% gather(year, gdp, -country)
+gdp$year <- gsub("X", "", gdp$year)
+```
+
+9f. Subset to a matching timeframe - 1981 to 2011
+
+```{r}
+cell <- subset(cell, year >= 1981 & year <= 2011)
+gdp <- subset(gdp, year >= 1981 & year <= 2011)
+```
+
+9g. Merge data sets & clean NA's
+
+```{r}
+merged <- merge(cell, gdp, all = TRUE)
+merged <- filter(merged, !is.na(merged$subs))
+merged <- filter(merged, !is.na(merged$gdp))
+```
+
+9h. Check ranges
+
+```{r}
+summary(merged$subs)
+summary(merged$gdp)
+```
+
+9i. Scatterplot using alpha & jitter shows a positive correlation - as a countrie's GDP increases, cell phone ownership increases.
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  geom_smooth(method = "lm", color = "red") +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(title = "GDP vs Cell Phones",
+       x = "GDP per Capita",
+       y = "Cell Phones per 100 People")
+```
+
+9j. Look at correlation to reinforce viewpoint
+
+```{r}
+cor.test(merged$gdp, merged$subs, method = "pearson")
+```
+
+9k. Look @ 95th percentile & correlation to strip out massive outliers. Viewpoint still holds true
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  xlim(0, quantile(merged$gdp, 0.95)) + 
+  ylim(0, quantile(merged$subs, 0.95)) +
+  geom_smooth(method = "lm", color = "red")
+```
+
+9l. Add mean, median, percentile (25th, 75th) - ask Srdjan, as this doesn't work well. Too many data points in y?
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(prob = .25), color = 'purple') +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(title = "GDP vs Cell Phones",
+       x = "GDP per Capita",
+       y = "Cell Phones per 100 People")
+```
+
+9m. Focus on a single year - 2011. 
+
+```{r}
+merged2011 <- subset(merged, year == 2011)
+```
+
+9n. Scatterplot & correlation for 2011 continues to reinforce positive relationship
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = merged2011) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  geom_smooth(method = "lm", color = "red") +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(title = "GDP vs Cell Phones - 2011",
+       x = "GDP per Capita",
+       y = "Cell Phones per 100 People")
+```
+
+```{r}
+cor.test(merged2011$gdp, merged2011$subs, method = "pearson")
+```
+
+9o. Look at top 10 countries & bottom 10 countries for 2011
+
+```{r}
+sorted2011 <- arrange(merged2011, desc(gdp))
+top102011 <- head(sorted2011, n = 10)
+bottom102011 <- tail(sorted2011, n = 10)
+```
+
+9p. Scatterplot & correlation for both shows positive correlation. However, much stronger correlation for bottom 10 - therefore, cell phone ownership as a factor of GDP much stronger in lower GDP countries (i.e. more cell phones owned by countires with lower GDP, and as GDP increases, cell phone ownership increases, at a faster rate in lower GDP countries.)
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = top102011) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  geom_smooth(method = "lm", color = "red") +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(title = "GDP vs Cell Phones - 2011, Top 10 Countries by GDP",
+       x = "GDP per Capita",
+       y = "Cell Phones per 100 People")
+```
+
+```{r}
+cor.test(top102011$gdp, top102011$subs, method = "pearson")
+```
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = bottom102011) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  geom_smooth(method = "lm", color = "red") +
+  scale_x_continuous() +
+  scale_y_continuous() +
+  labs(title = "GDP vs Cell Phones - 2011, Top 10 Countries by GDP",
+       x = "GDP per Capita",
+       y = "Cell Phones per 100 People")
+```
+
+```{r}
+cor.test(bottom102011$gdp, bottom102011$subs, method = "pearson")
+```
