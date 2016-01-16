@@ -173,12 +173,37 @@ ggplot(aes(x = gdp, y = subs), data = merged) +
 # Look at correlation
 cor.test(merged$gdp, merged$subs, method = "pearson")
 
-# Look @ 95th percentile & correlation
+# Look @ 95th percentile of GDP
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  xlim(0, quantile(merged$gdp, 0.95)) + 
+  geom_smooth(method = "lm", color = "red")
+
+# Look @ 95th percentile of subs
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  ylim(0, quantile(merged$subs, 0.95)) +
+  geom_smooth(method = "lm", color = "red")
+
+# Look @ 95th percentile for both
 ggplot(aes(x = gdp, y = subs), data = merged) +
   geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
   xlim(0, quantile(merged$gdp, 0.95)) + 
   ylim(0, quantile(merged$subs, 0.95)) +
   geom_smooth(method = "lm", color = "red")
+
+# Correlation of 95th percentiles
+# GDP
+merged_gdp95th <- subset(merged, gdp <= quantile(gdp, 0.95))
+cor.test(merged_gdp95th$gdp, merged_gdp95th$subs, method = "pearson")
+
+# Subs
+merged_subs95th <- subset(merged, subs <= quantile(subs, 0.95))
+cor.test(merged_subs95th$gdp, merged_subs95th$subs, method = "pearson")
+
+# Both
+merged_95th <- subset(merged, gdp <= quantile(gdp, 0.95) & subs <= quantile(subs, 0.95))
+cor.test(merged_95th$gdp, merged_95th$subs, method = "pearson")
 
 # Add mean, median, percentile (25th, 75th) - ask Srdjan
 ggplot(aes(x = gdp, y = subs), data = merged) +
@@ -186,7 +211,7 @@ ggplot(aes(x = gdp, y = subs), data = merged) +
   geom_line(stat = 'summary', fun.y = quantile, fun.args = list(prob = .25), color = 'purple') +
   scale_x_continuous() +
   scale_y_continuous() +
-  labs(title = "GDP vs Cell Phones - 2011",
+  labs(title = "GDP vs Cell Phone Subs",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
 
@@ -200,7 +225,7 @@ ggplot(aes(x = gdp, y = subs), data = merged2011) +
   geom_smooth(method = "lm", color = "red") +
   scale_x_continuous() +
   scale_y_continuous() +
-  labs(title = "GDP vs Cell Phones",
+  labs(title = "GDP vs Cell Phone Subs",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People - 2011")
 
@@ -218,7 +243,7 @@ ggplot(aes(x = gdp, y = subs), data = top102011) +
   geom_smooth(method = "lm", color = "red") +
   scale_x_continuous() +
   scale_y_continuous() +
-  labs(title = "GDP vs Cell Phones - 2011, Top 10 Countries by GDP",
+  labs(title = "GDP vs Cell Phone Subs - 2011, Top 10 Countries by GDP",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
 
@@ -230,7 +255,7 @@ ggplot(aes(x = gdp, y = subs), data = bottom102011) +
   geom_smooth(method = "lm", color = "red") +
   scale_x_continuous() +
   scale_y_continuous() +
-  labs(title = "GDP vs Cell Phones - 2011, Top 10 Countries by GDP",
+  labs(title = "GDP vs Cell Phone Subs - 2011, Top 10 Countries by GDP",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
 

@@ -257,7 +257,37 @@ ggplot(aes(x = gdp, y = subs), data = merged) +
 cor.test(merged$gdp, merged$subs, method = "pearson")
 ```
 
-9k. Look @ 95th percentile & correlation to strip out massive outliers. Viewpoint still holds true
+9k. Look @ 95th percentiles & correlations to strip out massive outliers. Viewpoint still holds true
+
+9ki. Look @ 95th percentile of GDP - plot & correlation
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  xlim(0, quantile(merged$gdp, 0.95)) + 
+  geom_smooth(method = "lm", color = "red")
+```
+
+```{r}
+merged_gdp95th <- subset(merged, gdp <= quantile(gdp, 0.95))
+cor.test(merged_gdp95th$gdp, merged_gdp95th$subs, method = "pearson")
+```
+
+9kii. Look @ 95th percentile of subs - plot & correlation
+
+```{r}
+ggplot(aes(x = gdp, y = subs), data = merged) +
+  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
+  ylim(0, quantile(merged$subs, 0.95)) +
+  geom_smooth(method = "lm", color = "red")
+```
+
+```{r}
+merged_subs95th <- subset(merged, subs <= quantile(subs, 0.95))
+cor.test(merged_subs95th$gdp, merged_subs95th$subs, method = "pearson")
+```
+
+9kiii. Look @ 95th percentile for both - plot & correlation
 
 ```{r}
 ggplot(aes(x = gdp, y = subs), data = merged) +
@@ -265,6 +295,11 @@ ggplot(aes(x = gdp, y = subs), data = merged) +
   xlim(0, quantile(merged$gdp, 0.95)) + 
   ylim(0, quantile(merged$subs, 0.95)) +
   geom_smooth(method = "lm", color = "red")
+```
+
+```{r}
+merged_95th <- subset(merged, gdp <= quantile(gdp, 0.95) & subs <= quantile(subs, 0.95))
+cor.test(merged_95th$gdp, merged_95th$subs, method = "pearson")
 ```
 
 9l. Add mean, median, percentile (25th, 75th) - ask Srdjan, as this doesn't work well. Too many data points in y?
