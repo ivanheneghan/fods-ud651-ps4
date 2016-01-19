@@ -164,8 +164,6 @@ summary(merged$gdp)
 ggplot(aes(x = gdp, y = subs), data = merged) +
   geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
   geom_smooth(method = "lm", color = "red") +
-  scale_x_continuous() +
-  scale_y_continuous() +
   labs(title = "GDP vs Cell Phones",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
@@ -205,12 +203,13 @@ cor.test(merged_subs95th$gdp, merged_subs95th$subs, method = "pearson")
 merged_95th <- subset(merged, gdp <= quantile(gdp, 0.95) & subs <= quantile(subs, 0.95))
 cor.test(merged_95th$gdp, merged_95th$subs, method = "pearson")
 
-# Add mean, median, percentile (25th, 75th) - ask Srdjan
+# Add mean, median, percentile (10, 50, 90) - ask Srdjan
 ggplot(aes(x = gdp, y = subs), data = merged) +
-  geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
-  geom_line(stat = 'summary', fun.y = quantile, fun.args = list(prob = .25), color = 'purple') +
-  scale_x_continuous() +
-  scale_y_continuous() +
+  geom_point(color = "orange") +
+  geom_line(stat = "summary", fun.y = mean) +
+  geom_line(stat = "summary", fun.y = quantile, fun.args = list(probs = .1), linetype = 2, color = "blue") +
+  geom_line(stat = "summary", fun.y = quantile, fun.args = list(probs = .5), linetype = 2, color = "blue") +
+  geom_line(stat = "summary", fun.y = quantile, fun.args = list(probs = .9), linetype = 2, color = "blue") +
   labs(title = "GDP vs Cell Phone Subs",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
@@ -223,8 +222,6 @@ merged2011 <- subset(merged, year == 2011)
 ggplot(aes(x = gdp, y = subs), data = merged2011) +
   geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
   geom_smooth(method = "lm", color = "red") +
-  scale_x_continuous() +
-  scale_y_continuous() +
   labs(title = "GDP vs Cell Phone Subs",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People - 2011")
@@ -241,8 +238,6 @@ bottom102011 <- tail(sorted2011, n = 10)
 ggplot(aes(x = gdp, y = subs), data = top102011) +
   geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
   geom_smooth(method = "lm", color = "red") +
-  scale_x_continuous() +
-  scale_y_continuous() +
   labs(title = "GDP vs Cell Phone Subs - 2011, Top 10 Countries by GDP",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
@@ -253,8 +248,6 @@ cor.test(top102011$gdp, top102011$subs, method = "pearson")
 ggplot(aes(x = gdp, y = subs), data = bottom102011) +
   geom_point(alpha = 1/10, position = position_jitter(h = 0)) +
   geom_smooth(method = "lm", color = "red") +
-  scale_x_continuous() +
-  scale_y_continuous() +
   labs(title = "GDP vs Cell Phone Subs - 2011, Top 10 Countries by GDP",
        x = "GDP per Capita",
        y = "Cell Phones per 100 People")
